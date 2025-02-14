@@ -1,9 +1,1 @@
-
-graph TD
-    A[Enter Chart Definition] --> B(Preview)
-    B --> C{decide}
-    C --> D[Keep]
-    C --> E[Edit Definition]
-    E --> B
-    D --> F[Save Image and Code]
-    F --> B
+![image](https://github.com/user-attachments/assets/2f765003-2d78-4031-a069-a7824a080ebf)
