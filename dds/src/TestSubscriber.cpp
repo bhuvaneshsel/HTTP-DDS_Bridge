@@ -180,10 +180,9 @@ public:
     }
 
     //!Run the Subscriber
-    void run(
-            uint32_t samples)
+    void run()
     {
-        while (listener_.samples_ < samples)
+        while (true)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
@@ -196,12 +195,11 @@ int main(
         char** argv)
 {
     std::cout << "Starting subscriber." << std::endl;
-    uint32_t samples = 10;
 
     TestSubscriber* mysub = new  TestSubscriber();
     if (mysub->init())
     {
-        mysub->run(samples);
+        mysub->run();
     }
 
     delete mysub;

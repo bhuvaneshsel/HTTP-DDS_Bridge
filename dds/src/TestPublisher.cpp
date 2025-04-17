@@ -30,7 +30,9 @@
 #include <fastdds/dds/publisher/Publisher.hpp> //mangages DateWriter objects, does not actually write the data to the topic
 #include <fastdds/dds/topic/TypeSupport.hpp> //manages the custom defined data type?
 
+
 using namespace eprosima::fastdds::dds;
+
 
 class TestPublisher
 {
@@ -167,6 +169,12 @@ public:
         return true;
     }
 
+    void set_data(uint32_t index, const std::string& message)
+    {   
+        test_.index(index);
+        test_.message(message);
+    }   
+
     //!Send a publication
     bool publish()
     {
@@ -181,20 +189,18 @@ public:
     }
 
     //!Run the Publisher
-    void run(
-            uint32_t samples)
+    void run()
     {
-        uint32_t samples_sent = 0;
-        while (samples_sent < samples)
-        {
-            if (publish())
+        if (publish())
             {
-                samples_sent++;
                 std::cout << "Message: " << test_.message() << " with index: " << test_.index()
                             << " SENT" << std::endl;
             }
+            else
+            {
+                std::cout << "No subscribers matched." << std::endl;
+            }
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        }
     }
 };
 
@@ -204,14 +210,29 @@ int main(
         char** argv)
 {
     std::cout << "Starting publisher." << std::endl;
-    uint32_t samples = 10;
 
     TestPublisher* mypub = new TestPublisher();
     if(mypub->init())
     {
-        mypub->run(samples);
+        mypub->run();
     }
 
     delete mypub;
     return 0;
 }
+
+#ifdef BUILD_PYBIND_MODULE
+    #include <pybind11/pybind11.h>
+    namespace py = pybind11;
+
+    PYBIND11_MODULE(ddspython, m) {
+        m.doc() = "DDS publisher";
+
+        py::class_<TestPublisher>(m, "TestPublisher")
+        .def(py::init<>())                      // Expose the constructor
+        .def("init", &TestPublisher::init)      // Bind the init() method
+        .def("publish", &TestPublisher::publish) //Bind the publish() method
+        .def("set_data", &TestPublisher::set_data) //Bind the set_data() method
+        .def("run", &TestPublisher::run);  //Bind the run() method
+}
+#endif
