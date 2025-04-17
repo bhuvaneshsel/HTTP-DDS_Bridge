@@ -8,8 +8,8 @@ HTTP-DDS_Bridge is a bridge application that converts JSON data from an HTTP cli
 # Set Up Guide
 ## 1. Build the DDS App
   1. Change directory into the build folder and run the commands:
-      >cmake ..
-      >cmake --build .
+      >cmake .. <br/>
+      >cmake --build . <br/>
     *This is for Mac, it might vary for Windows/Linux
 ## 2. Build the Bridge App
   1. Change directory into the bridge folder and create a virtual environment:
@@ -20,8 +20,8 @@ HTTP-DDS_Bridge is a bridge application that converts JSON data from an HTTP cli
      >Mac: source .venv/bin/activate  <br/>
   *Note that for Windows, you might run into an error where you don't have permissions to activate the Virtual Environment if you are using the VSCode terminal. In that case, use     command prompt instead.
   2. Install from requirements.txt:<br>
-    >Make sure your virtual environment is active<br/>
-    >pip install -r requirements.txt<br/>
+     >Make sure your virtual environment is active<br/>
+     >pip install -r requirements.txt<br/>
 ## 3. Run Both Apps
   1. In the bridge folder with your virtual environment active, run:
      >python main.py
