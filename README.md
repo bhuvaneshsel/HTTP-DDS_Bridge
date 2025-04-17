@@ -7,7 +7,8 @@ HTTP-DDS_Bridge is a bridge application that converts JSON data from an HTTP cli
 
 # Set Up Guide
 ## 1. Build the DDS App
-  1. Change directory into the build folder and run the commands:
+  1. Create a folder called build inside the dds folder.
+  2. Change directory into the build folder and run the commands:
       >cmake .. <br/>
       >cmake --build . <br/>
     *This is for Mac, it might vary for Windows/Linux
