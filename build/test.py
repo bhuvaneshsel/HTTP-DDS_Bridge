@@ -6,7 +6,13 @@ import ddspython
 pub = ddspython.APublisher()
 if pub.init():
     print("INITIALIZED")
-    pub.set_data()  # placeholder
+
+    data_dict = {
+        "x": 42.5,     # example float
+        "y": True      # example boolean
+    }
+
+    pub.set_data(data_dict)  
     if pub.publish():
         print("Published")
     else:
