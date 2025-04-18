@@ -1,0 +1,11 @@
+struct A
+{
+    float x; 
+    boolean y; 
+};
+struct B
+{
+    A a_data; 
+    short b[3]; 
+    sequence<string> c; 
+};
