@@ -21,9 +21,39 @@ else:
 
 app = Flask(__name__)
 
+
+@app.route('/DDS-read/<dds_topic>', methods=['GET'])
+def DDS_read(dds_topic):
+
+    #Extra parameters received from URL are put into a dictionary here. Anything after any question marks: ?extraInfo1?extraInfo2.
+    #extraInformation = request.args
+
+    #Creates subscriber instance based on topic dds_topic.
+    sub = ddspython.TestSubscriber(dds_topic)
+
+    if sub.init():
+        print("Activated Subscriber.")
+    else:
+        print("Failed to activate subscriber.")
+        return
+
+    #Gets the data from the subscriber once connected, should be synchronous, awaits for data.
+        #If data takes too long (start timer), then return an exception.
+    #dds_object = sub.get_data()
+
+    dds_object = {
+        "dds_name": "temporary",
+        "data": "some data",
+        "extra_info": extraInformation
+    }
+
+    #jsonfiy --> jsonfies a dictionary in to a JSON object.
+    return jsonify(dds_object)
+
+
 @app.route("/DDS-write", methods=["POST"])
 def DDS_write():
-    data = request.get_json();
+    data = request.get_json()
 
     index = data.get("index", 0)
     message = data.get("message", "")
