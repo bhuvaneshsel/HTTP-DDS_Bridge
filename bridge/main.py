@@ -28,8 +28,10 @@ def DDS_read(dds_topic):
     #Extra parameters received from URL are put into a dictionary here. Anything after any question marks: ?extraInfo1?extraInfo2.
     #extraInformation = request.args
 
-    #Creates subscriber instance based on topic dds_topic.
-    sub = ddspython.TestSubscriber(dds_topic)
+    #Creates subscriber instance.
+    sub = ddspython.TestSubscriber()
+    #Set topic for sub
+    sub.set_topic(dds_topic)
 
     if sub.init():
         print("Activated Subscriber.")

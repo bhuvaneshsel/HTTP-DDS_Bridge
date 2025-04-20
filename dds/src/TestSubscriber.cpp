@@ -188,6 +188,11 @@ public:
         }
     }
 
+    //Create a method that sends data (to bridge).
+    // void get_data(){
+
+    // }
+
 };
 
 int main(
@@ -205,3 +210,24 @@ int main(
     delete mysub;
     return 0;
 }
+
+
+//Pybind on subscriber
+/*
+#ifdef BUILD_PYBIND_MODULE
+    #include <pybind11/pybind11.h>
+    namespace py = pybind11;
+
+    PYBIND11_MODULE(ddspython, m) {
+        m.doc() = "DDS subscriber";
+
+        py::class_<TestSubscriber>(m, "TestSubscriber")
+        .def(py::init<>())                      // Expose the constructor
+        .def("init", &TestSubscriber::init)      // Bind the init() method
+        .def("get_data", &TestSubscriber::get_data) //Bind the publish() method
+        .def("set_topic", &TestSubscriber::set_topic) //Bind the set_data() method
+        .def("run", &TestSubscriber::run);  //Bind the run() method
+}
+#endif
+
+*/
