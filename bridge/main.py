@@ -11,12 +11,15 @@ sys.path.append(os.path.join(base_dir, "../dds/build"))
 import ddspython
 
 # Create the publisher instance
+
 pub = ddspython.TestPublisher()
 
 if pub.init():
     print("DDS publisher initialized.")
 else:
     print("DDS publisher initialization failed.")
+
+
     
 
 app = Flask(__name__)
@@ -29,15 +32,15 @@ def DDS_read(dds_topic):
     #extraInformation = request.args
 
     #Creates subscriber instance.
-    sub = ddspython.TestSubscriber()
+    #sub = ddspython.TestSubscriber()
     #Set topic for sub
-    sub.set_topic(dds_topic)
+    #sub.set_topic(dds_topic)
 
-    if sub.init():
-        print("Activated Subscriber.")
-    else:
-        print("Failed to activate subscriber.")
-        return
+    #if sub.init():
+       # print("Activated Subscriber.")
+    #else:
+       # print("Failed to activate subscriber.")
+      #  return
 
     #Gets the data from the subscriber once connected, should be synchronous, awaits for data.
         #If data takes too long (start timer), then return an exception.
@@ -46,7 +49,7 @@ def DDS_read(dds_topic):
     dds_object = {
         "dds_name": "temporary",
         "data": "some data",
-        "extra_info": extraInformation
+        "extra_info": "extraInformation",
     }
 
     #jsonfiy --> jsonfies a dictionary in to a JSON object.
@@ -55,12 +58,19 @@ def DDS_read(dds_topic):
 
 @app.route("/DDS-write", methods=["POST"])
 def DDS_write():
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({"error": "Invalid JSON", "details": str(e)}), 400
 
-    index = data.get("index", 0)
-    message = data.get("message", "")
+    if "index" not in data or "message" not in data:
+        return jsonify({"error": "Missing 'index' or 'message' field"}), 400
 
     #sets data of message that will be sent
+
+    index = data["index"]
+    message = data["message"]
+    
     pub.set_data(index, message)
 
     #publishes data
