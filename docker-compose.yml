@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  dds:
+    image: http-dds-bridge
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
