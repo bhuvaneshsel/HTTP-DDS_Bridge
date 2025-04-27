@@ -3,7 +3,7 @@ import re
 import subprocess
 
 # === CONFIG ===
-FASTDDSGEN_PATH = "/Users/bhuvaneshselvaraj/Fast-DDS/src/fastddsgen/scripts/fastddsgen"
+FASTDDSGEN_PATH = "/workspace/extern/fastddsgen/scripts/fastddsgen"
 IDL_FILENAME = "Sample.idl"
 OUTPUT_DIR = "."  # adjust as needed
 
@@ -389,9 +389,9 @@ def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var
 
 if __name__ == "__main__":
     # Step 1: Run fastddsgen
-    subprocess.run([FASTDDSGEN_PATH, IDL_FILENAME])
+    #subprocess.run([FASTDDSGEN_PATH, IDL_FILENAME])
     #subprocess.run(["java", "-jar", FASTDDSGEN_PATH, IDL_FILENAME])
-    #subprocess.run(["/workspace/extern/fastddsgen/scripts/fastddsgen", IDL_FILENAME])
+    subprocess.run(["/workspace/extern/fastddsgen/scripts/fastddsgen", IDL_FILENAME])
 
 
 
