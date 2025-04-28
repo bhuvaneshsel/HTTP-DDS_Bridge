@@ -182,6 +182,9 @@ int main()
 
 # === 3. Generate Subscriber App ===
 def generate_subscriber_cpp(struct_name: str, idl_name: str, output_dir: str):
+
+    all_structs = extract_struct_fields(IDL_FILENAME)
+    set_json_body = "\n".join(generate_json_in_subscriber(struct_name, all_structs))
     cpp_code = f"""// Generated Subscriber for struct {struct_name}
 
 #include \"{idl_name}PubSubTypes.hpp\"
@@ -197,6 +200,9 @@ def generate_subscriber_cpp(struct_name: str, idl_name: str, output_dir: str):
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
 
+#include <nlohmann/json.hpp>  // Include the nlohmann JSON library
+
+using json = nlohmann::json;
 using namespace eprosima::fastdds::dds;
 
 class {struct_name}Subscriber
@@ -208,11 +214,21 @@ private:
     Topic* topic_;
     TypeSupport type_;
 
+    // Flag to indicate if we should stop the subscriber
+    std::atomic<bool> stop_subscriber_{{false}};
+
     class SubListener : public DataReaderListener
     {{
     public:
         std::atomic_int samples_{{0}};
+
+        //Actual data we receive from Publisher to listener.
         {struct_name} sample_;
+
+        //Json data that we send to server.
+        json json_data;
+
+
 
         void on_subscription_matched(DataReader*, const SubscriptionMatchedStatus& info) override
         {{
@@ -233,9 +249,31 @@ private:
             {{
                 samples_++;
                 std::cout << \"Message RECEIVED.\" << std::endl;
+
+                //------------------------------------------------------------------------------------------------------------------
+
+                // Convert the received data to JSON
+                json_data = convert_data_to_json(sample_);
+
+                 // Set the stop flag to true after receiving data
+                stop_subscriber_ = true;
+                //------------------------------------------------------------------------------------------------------------------
             }}
         }}
+        
+        //------------------------------------------------------------------------------------------------------------------
+        // Convert the data to JSON.
+    json convert_data_to_json()
+    {{
+            //Remember that: sample_ is the data.
+{set_json_body}
+    }}
+        //------------------------------------------------------------------------------------------------------------------
     }} listener_;
+
+
+
+
 
 public:
     {struct_name}Subscriber()
@@ -270,11 +308,45 @@ public:
 
     void run()
     {{
-        while (true)
+        //Stop subscriber once data received.
+        while (!stop_subscriber_)
         {{
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }}
+
+        // Subscriber has received data, now we can stop
+        std::cout << "Stopping subscriber after receiving data." << std::endl;
     }}
+
+    //------------------------------------------------------------------------------------------------------------------
+    //Retrieves JSON data we received (and server should call method to retrieve it via pybibd.----------------------------------------------------------------------------------------------------------------------------------
+        // Expose the method that returns JSON data
+
+    nlohmann::json get_json_data() {{
+        return listener_.json_data;
+    }}
+    //------------------------------------------------------------------------------------------------------------------
+
+    #Pybind Code---------------------------------------------------------------------------------------------------------------------------------------
+    #ifdef BUILD_PYBIND_MODULE
+    #include <pybind11/pybind11.h>
+    #include <pybind11/stl.h>
+    #include <pybind11/pytypes.h>
+
+    namespace py = pybind11;
+    void bind_{struct_name}Subscriber(py::module_& m)
+    {{
+        py::class_<{struct_name}Subscriber>(m, "{struct_name}Subscriber")
+            .def(py::init<>())
+            .def("init", &{struct_name}Subscriber::init)
+            .def("get_json_data", &{struct_name}Subscriber::get_json_data)
+            .def("run", &{struct_name}Subscriber::run);
+    }}
+    #endif
+    #---------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 }};
 #ifndef BUILD_PYBIND_MODULE
 int main()
@@ -324,6 +396,7 @@ def generate_bindings_cpp(struct_names, output_dir="."):
 
     print(f"✅ Generated {bindings_path}")
 
+#provides a dictionary with struct names?
 def extract_struct_fields(idl_path):
     with open(idl_path, 'r') as f:
         content = f.read()
@@ -337,6 +410,74 @@ def extract_struct_fields(idl_path):
             parsed_fields.append((t.strip(), n.strip()))
         structs[struct_name] = parsed_fields
     return structs
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Generate C++ code for converting the struct data to JSON based on parsed IDL structs.  (For Subscriber class.)
+    #dataName represents the data package in the subscriber, in this case, it's sample_.
+def generate_json_in_subscriber(struct_name, all_structs, indent="        ", dataName = "sample_"):
+    """
+    :param struct_name: The name of the struct to generate conversion for.
+    :param all_structs: A dictionary with struct names as keys and a list of (field_type, field_name) tuples.
+    :param indent: Indentation to use for the generated code.
+    :return: C++ code as a string that converts struct data to JSON.
+    """
+
+    # Define a basic IDL to C++ type mapping
+    idl_to_cpp_cast_map = {
+        "short": "int16_t",
+        "unsigned short": "uint16_t",
+        "long": "int32_t",
+        "unsigned long": "uint32_t",
+        "long long": "int64_t",
+        "unsigned long long": "uint64_t",
+        "float": "float",
+        "double": "double",
+        "boolean": "bool",
+        "char": "char",
+        "string": "std::string",
+    }
+
+    #remember sample_ is the data
+    # Start generating C++ function
+    cpp_code = []
+    #cpp_code.append(f"{indent}json j;")  # Initialize the json object with proper indentation
+
+    # Get fields for the given struct_name from all_structs
+    fields = all_structs.get(struct_name, [])
+
+    # Iterate over fields to generate conversion code
+    for field_type, field_name in fields:
+        field_type = field_type.strip()
+        cpp_type = idl_to_cpp_cast_map.get(field_type, field_type)
+
+        # Handle different field types
+        if field_type.startswith("sequence<"):
+            # Handle sequences (e.g., sequence<int>)
+            element_type = field_type[len("sequence<"):-1].strip()
+            cpp_type = idl_to_cpp_cast_map.get(element_type, element_type)
+            cpp_code.append(f"{indent}j[\"{field_name}\"] = {dataName}.{field_name}(); // sequence<{cpp_type}>")
+        
+        elif "[" in field_type:
+            # Handle fixed-size arrays (e.g., long[5])
+            base_type = field_type.split("[")[0].strip()
+            cpp_type = idl_to_cpp_cast_map.get(base_type, base_type)
+            cpp_code.append(f"{indent}j[\"{field_name}\"] = {dataName}.{field_name}(); // array<{cpp_type}>")
+        
+        else:
+            # Handle basic scalar types (int, float, etc.)
+            cpp_code.append(f"{indent}j[\"{field_name}\"] = {dataName}.{field_name}(); // {cpp_type}")
+    
+    cpp_code.append(f"{indent}return j;")  # Ensure proper indentation for the return statement
+
+    # Now we join the code with proper line breaks and return a single formatted string
+    
+    for line in cpp_code:
+        print(line)
+    # formatted_code = "\n".join(cpp_code)
+    
+    return cpp_code
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var_name="sample_"):
     lines = []

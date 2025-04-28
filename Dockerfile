@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     libfoonathan-memory-dev \
     build-essential \
     ca-certificates \
+    # Ensure nlohmann_json is installed
+    nlohmann-json3-dev \
     tmux
 
 # 2. Set up workspace

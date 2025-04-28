@@ -20,7 +20,7 @@ else:
     print("DDS publisher initialization failed.")
 
 
-    
+                                #Do we need to create threads for the pub/sub???? Within the server.
 
 app = Flask(__name__)
 
