@@ -327,7 +327,7 @@ public:
     }}
     //------------------------------------------------------------------------------------------------------------------
 
-    #Pybind Code---------------------------------------------------------------------------------------------------------------------------------------
+    //Pybind Code---------------------------------------------------------------------------------------------------------------------------------------
     #ifdef BUILD_PYBIND_MODULE
     #include <pybind11/pybind11.h>
     #include <pybind11/stl.h>
@@ -343,7 +343,7 @@ public:
             .def("run", &{struct_name}Subscriber::run);
     }}
     #endif
-    #---------------------------------------------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -518,6 +518,14 @@ def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var
             lines.append(f'{indent}if (d.contains("{field_name}")) {{')
             lines.append(f'{indent}    auto tmp = d["{field_name}"].cast<std::vector<{cpp_type}>>();')
             lines.append(f'{indent}    std::copy(tmp.begin(), tmp.end(), {var_name}.{field_name}().begin());')
+            lines.append(f'{indent}}}')
+
+        elif field_type in all_structs:
+            # Handle nested struct!
+            nested_var_name = f"{var_name}.{field_name}()"  # Accessor to nested struct
+            lines.append(f'{indent}if (d.contains("{field_name}")) {{')
+            lines.append(f'{indent}    auto nested_dict = d["{field_name}"].cast<pybind11::dict>();')
+            lines.extend(generate_set_data_from_dict(field_type, all_structs, indent + "    ", nested_var_name))
             lines.append(f'{indent}}}')
 
         else:

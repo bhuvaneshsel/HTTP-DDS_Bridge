@@ -4,7 +4,8 @@ struct A
     boolean y; 
 };
 struct B
-{ 
+{
+    A aVal;
     short b[3]; 
     sequence<string> c; 
 };

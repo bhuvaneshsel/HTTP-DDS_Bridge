@@ -1,22 +1,31 @@
 import sys
 import threading
 import asyncio
+import json
+
 
 sys.path.append("./bridge-build")  # Adjust path if needed
 
 #import subscriber pybind file?
 import ddspython
 
-pub = ddspython.APublisher()
+
+
+pub = ddspython.BPublisher()
 if pub.init():
     print("INITIALIZED")
 
-    data_dict = {
-        "x": 42.5,     # example float
-        "y": True      # example boolean
+    json_b = '''
+    {
+    "a": { "x": 1.23e4, "y": true },
+    "b": [4, 5, 6],
+    "c": ["foo", "bar"]
     }
+    '''
+    dict_b = json.loads(json_b)
 
-    pub.set_data(data_dict)  
+
+    pub.set_data(dict_b)  
     if pub.publish():
         print("Published")
     else:
