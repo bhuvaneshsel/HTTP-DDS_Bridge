@@ -404,10 +404,13 @@ def extract_struct_fields(idl_path):
     struct_defs = re.findall(r'struct\s+(\w+)\s*{([^}]*)}', content)
     structs = {}
     for struct_name, body in struct_defs:
-        fields = re.findall(r'(\w+(?:\s+\w+)?(?:<.*?>)?(?:\s*\[.*\])?)\s+(\w+);', body)
+        fields = re.findall(r'(\w+(?:\s+\w+)?(?:<.*?>)?)\s+(\w+)(?:\[(\d+)\])?;', body)
         parsed_fields = []
-        for t, n in fields:
-            parsed_fields.append((t.strip(), n.strip()))
+        for t, n, array_size in fields:
+            t = t.strip()
+            if array_size:
+                t = f"{t}[{array_size}]"  # mark it as fixed array
+            parsed_fields.append((t, n.strip()))
         structs[struct_name] = parsed_fields
     return structs
 

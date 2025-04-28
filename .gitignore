@@ -1,2 +1,10 @@
 .venv/
-/dds/build/*
+.vscode/
+bridge-src/*
+!bridge-src/generate_code.py
+!bridge-src/Sample.idl
+
+bridge-build/*
+!bridge-build/main.py
+!bridge-build/test_main.py
+!bridge-build/test.py
