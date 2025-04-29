@@ -8,3 +8,4 @@ bridge-build/*
 !bridge-build/main.py
 !bridge-build/test_main.py
 !bridge-build/test.py
+!bridge-build/testSub.py
