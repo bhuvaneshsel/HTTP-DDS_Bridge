@@ -358,7 +358,7 @@ public:
     }}
 
     //------------------------------------------------------------------------------------------------------------------
-    //Retrieves JSON data we received (and server should call method to retrieve it via pybibd.----------------------------------------------------------------------------------------------------------------------------------
+    //Retrieves JSON data we received (and server should call method to retrieve it via pybind.----------------------------------------------------------------------------------------------------------------------------------
         // Expose the method that returns JSON data
 
     nlohmann::json get_json_data() {{

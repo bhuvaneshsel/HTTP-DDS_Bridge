@@ -10,75 +10,84 @@ sys.path.append(os.path.join(base_dir, "../dds/build"))
 #the c++ code wrapped in PYBIND11
 import ddspython
 
-# Create the publisher instance
-
-pub = ddspython.TestPublisher()
-
-if pub.init():
-    print("DDS publisher initialized.")
-else:
-    print("DDS publisher initialization failed.")
-
-
-                                #Do we need to create threads for the pub/sub???? Within the server.
+# cache pub
+publishers = {}
+# cache sub
+subscribers = {}
 
 app = Flask(__name__)
 
+# no param call, direct user properly
+@app.route('/DDS-read', methods=['GET'])
+def DDS_read_missing_topic():
+    return jsonify({"error": "Missing DDS topic. Use /DDS-read/<dds_topic>"}), 400
 
 @app.route('/DDS-read/<dds_topic>', methods=['GET'])
 def DDS_read(dds_topic):
+    try:
+        # caching
+        if dds_topic not in subscribers:
+            try:
+                sub = ddspython.TestSubscriber()
+                sub.set_topics(dds_topic)
+                if not sub.init():
+                    return jsonify({"error": f"Failed to init subscriber for topic '{dds_topic}'"}), 500
+                subscribers[dds_topic] = sub
+            except Exception as e:
+                return jsonify({"error": f"Failed to create subscriber for topic '{dds_topic}'", "details": str(e)}), 500
+        else:
+            sub = subscribers[dds_topic]
 
-    #Extra parameters received from URL are put into a dictionary here. Anything after any question marks: ?extraInfo1?extraInfo2.
-    #extraInformation = request.args
+        # read data
+        dds_object = sub.get_json_data()
 
-    #Creates subscriber instance.
-    #sub = ddspython.TestSubscriber()
-    #Set topic for sub
-    #sub.set_topic(dds_topic)
+        return dds_object, 200
+    except Exception as e:
+        return jsonify({"error": "Failed to read from DDS", "details": str(e)}), 500
 
-    #if sub.init():
-       # print("Activated Subscriber.")
-    #else:
-       # print("Failed to activate subscriber.")
-      #  return
+# no param call, direct user properly
+@app.route('/DDS-write', methods=['POST'])
+def DDS_write_missing_topic_name():
+    return jsonify({"error": "Missing topic name. Use /DDS-write/<topic_name>"}), 400
 
-    #Gets the data from the subscriber once connected, should be synchronous, awaits for data.
-        #If data takes too long (start timer), then return an exception.
-    #dds_object = sub.get_data()
-
-    dds_object = {
-        "dds_name": "temporary",
-        "data": "some data",
-        "extra_info": "extraInformation",
-    }
-
-    #jsonfiy --> jsonfies a dictionary in to a JSON object.
-    return jsonify(dds_object)
-
-
-@app.route("/DDS-write", methods=["POST"])
-def DDS_write():
+@app.route("/DDS-write/<topic_name>", methods=["POST"])
+def DDS_write(topic_name):
+    # read json
     try:
         data = request.get_json(force=True)
     except Exception as e:
         return jsonify({"error": "Invalid JSON", "details": str(e)}), 400
 
-    if "index" not in data or "message" not in data:
-        return jsonify({"error": "Missing 'index' or 'message' field"}), 400
+    # verify required fields, change as needed
+    required_fields = {"index", "message"}
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400
 
-    #sets data of message that will be sent
+    # caching
+    if topic_name not in publishers:
+        try:
+            pub = ddspython.TestPublisher()
+            pub.set_topic(topic_name)
+            if not pub.init():
+                return jsonify({"error": f"Failed to initialize publisher for topic '{topic_name}'"}), 500
+            publishers[topic_name] = pub
+        except Exception as e:
+            return jsonify({"error": f"Failed to create publisher for topic '{topic_name}'", "details": str(e)}), 500
+    else:
+        pub = publishers[topic_name]
 
-    index = data["index"]
-    message = data["message"]
-    
-    pub.set_data(index, message)
+    # set data in preparation for publishing
+    try:
+        pub.set_data(data)
+    except Exception as e:
+        return jsonify({"error": "Failed to set data", "details": str(e)}), 500
 
-    #publishes data
+    # publishes data
     if pub.publish():  
-        return jsonify({"status": "published"}), 200
+        return jsonify({"status": "published", "topic": topic_name}), 200
     else:
         return jsonify({"status": "no subscriber matched"}), 503
 
 if __name__ == "__main__":
     app.run(debug=True)
-
