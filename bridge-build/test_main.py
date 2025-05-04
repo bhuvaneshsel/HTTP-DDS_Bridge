@@ -31,9 +31,7 @@ def client():
 def test_dds_read_returns_data(client):
     response = client.get("/DDS-read/B")
 
-    json_data = response.get_json()
-
-    # Basic structure check — adjust based on what your subscriber returns
+    json_data = print(response.get_json())
     assert isinstance(json_data, dict)
 
 def test_dds_write_dynamic_topic_success(client):

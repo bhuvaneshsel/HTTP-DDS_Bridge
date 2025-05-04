@@ -25,15 +25,13 @@ def DDS_read(dds_topic):
 
         SubscriberClass = getattr(ddspython, subscriber_name)
 
-        sub = ddspython.BSubscriber()
+        sub = SubscriberClass()
+        
         sub.init()
-        time.sleep(5)
         sub.run()
         # read data
         try:
-            print("now getting json data\n")
-            dds_object = {print(sub.get_json_data())}
-            print("got json data\n")
+            dds_object = {sub.get_json_data()}
 
         except Exception as e:
             print("DDS read failed:", e)
