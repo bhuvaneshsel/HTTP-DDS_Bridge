@@ -10,11 +10,6 @@ sys.path.append(os.path.join(base_dir, "../dds/build"))
 #the c++ code wrapped in PYBIND11
 import ddspython
 
-# cache pub
-publishers = {}
-# cache sub
-subscribers = {}
-
 app = Flask(__name__)
 
 # no param call, direct user properly
@@ -25,24 +20,30 @@ def DDS_read_missing_topic():
 @app.route('/DDS-read/<dds_topic>', methods=['GET'])
 def DDS_read(dds_topic):
     try:
-        # caching
-        if dds_topic not in subscribers:
-            try:
-                sub = ddspython.TestSubscriber()
-                sub.set_topics(dds_topic)
-                if not sub.init():
-                    return jsonify({"error": f"Failed to init subscriber for topic '{dds_topic}'"}), 500
-                subscribers[dds_topic] = sub
-            except Exception as e:
-                return jsonify({"error": f"Failed to create subscriber for topic '{dds_topic}'", "details": str(e)}), 500
-        else:
-            sub = subscribers[dds_topic]
+        
+        subscriber_name = f"{dds_topic}Subscriber"
 
+        SubscriberClass = getattr(ddspython, subscriber_name)
+
+        sub = ddspython.BSubscriber()
+        sub.init()
+        time.sleep(5)
+        sub.run()
         # read data
-        dds_object = sub.get_json_data()
+        try:
+            print("now getting json data\n")
+            dds_object = {print(sub.get_json_data())}
+            print("got json data\n")
+
+        except Exception as e:
+            print("DDS read failed:", e)
 
         return dds_object, 200
+    
+    except AttributeError:
+        return jsonify({"error": f"Publisher class for '{dds_topic}' not found"}), 404
     except Exception as e:
+
         return jsonify({"error": "Failed to read from DDS", "details": str(e)}), 500
 
 # no param call, direct user properly
@@ -50,44 +51,36 @@ def DDS_read(dds_topic):
 def DDS_write_missing_topic_name():
     return jsonify({"error": "Missing topic name. Use /DDS-write/<topic_name>"}), 400
 
-@app.route("/DDS-write/<topic_name>", methods=["POST"])
-def DDS_write(topic_name):
-    # read json
+@app.route("/DDS-write/<dds_topic>", methods=["POST"])
+def DDS_write(dds_topic):
     try:
+
+        publisher_name = f"{dds_topic}Publisher"
+
+        # find corresponding publisher
+        PublisherClass = getattr(ddspython, publisher_name)
+
+        # run publisher
+        pub = PublisherClass()
+
+        # get and verify data
         data = request.get_json(force=True)
-    except Exception as e:
-        return jsonify({"error": "Invalid JSON", "details": str(e)}), 400
-
-    # verify required fields, change as needed
-    required_fields = {"index", "message"}
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing required field: {field}"}), 400
-
-    # caching
-    if topic_name not in publishers:
-        try:
-            pub = ddspython.TestPublisher()
-            pub.set_topic(topic_name)
-            if not pub.init():
-                return jsonify({"error": f"Failed to initialize publisher for topic '{topic_name}'"}), 500
-            publishers[topic_name] = pub
-        except Exception as e:
-            return jsonify({"error": f"Failed to create publisher for topic '{topic_name}'", "details": str(e)}), 500
-    else:
-        pub = publishers[topic_name]
-
-    # set data in preparation for publishing
-    try:
+        if data is None:
+            return jsonify({"error": "Invalid or missing JSON"}), 400
+        
         pub.set_data(data)
-    except Exception as e:
-        return jsonify({"error": "Failed to set data", "details": str(e)}), 500
+        pub.publish()
 
-    # publishes data
-    if pub.publish():  
-        return jsonify({"status": "published", "topic": topic_name}), 200
-    else:
-        return jsonify({"status": "no subscriber matched"}), 503
+        return jsonify({"status": "success"}), 200
+    
+    except AttributeError:
+        return jsonify({"error": f"Publisher class for '{dds_topic}' not found"}), 404
+    
+    except Exception as e:
+        return jsonify({"error": "Failed to publish", "details": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
