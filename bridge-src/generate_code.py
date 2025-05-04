@@ -372,9 +372,8 @@ public:
     //Retrieves JSON data we received (and server should call method to retrieve it via pybibd.----------------------------------------------------------------------------------------------------------------------------------
         // Expose the method that returns JSON data
 
-    nlohmann::json get_json_data() {{
-        // Set the stop flag to true after receiving data
-        return listener_.json_data;
+    std::string get_json_data() {{
+        return listener_.json_data.dump();  // Dump JSON string here
     }}
     //------------------------------------------------------------------------------------------------------------------
 
@@ -432,38 +431,6 @@ def generate_bindings_cpp(struct_names, output_dir="."):
         lines.append(f'#include "{struct}Publisher.cpp"')
         lines.append(f'#include "{struct}Subscriber.cpp"')
 
-    #Converts C++ Json to python JSON
-    pybindJson = """   
-        namespace pybind11 {
-            namespace detail {
-                template <> struct type_caster<nlohmann::json> {
-                    public:
-                        // To tell pybind how to convert a nlohmann::json object to a Python dict
-                        PYBIND11_TYPE_CASTER(nlohmann::json, _("dict"));
-
-                        // Convert the Python object to nlohmann::json
-                        bool load(pybind11::handle src, bool) {
-                            if (src.is_none()) {
-                                value = nlohmann::json();
-                                return true;
-                            }
-                            try {
-                                value = nlohmann::json::parse(src.cast<std::string>());
-                            } catch (...) {
-                                return false;
-                            }
-                            return true;
-                        }
-
-                        // Convert the nlohmann::json object to Python dict
-                        static pybind11::handle cast(const nlohmann::json &src, pybind11::return_value_policy, pybind11::handle) {
-                            return pybind11::cast(src.dump());
-                        }
-                };
-            }
-        }
-    """
-    lines.append(pybindJson)
     lines.append("\nnamespace py = pybind11;")
 
     # for struct in struct_names:

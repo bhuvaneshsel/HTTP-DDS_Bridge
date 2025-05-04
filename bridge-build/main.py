@@ -18,16 +18,19 @@ app = Flask(__name__)
 @app.route('/DDS-read', methods=['GET'])
 def DDS_read():
     sub = ddspython.BSubscriber()
-    sub.init()
-    sub = ddspython.BSubscriber()
     if not sub.init():
-        print("FAILED")
         return jsonify({"error": "Subscriber failed to initialize"}), 500
 
     sub.run()
-    data = sub.get_json_data()
-    print("DDS-read received:", data)
-    return jsonify(data)
+
+    raw_json_str = sub.get_json_data()  
+  
+    try:
+        json_data = json.loads(raw_json_str)
+        return jsonify(json_data)
+    except Exception as e:
+        print("Error decoding JSON:", e)
+        return jsonify({"error": f"Invalid JSON format: {str(e)}"}), 500
 
 
 @app.route("/DDS-write", methods=["POST"])
