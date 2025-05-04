@@ -10,14 +10,15 @@ sys.path.append(os.path.join(base_dir, "../dds/build"))
 
 #the c++ code wrapped in PYBIND11
 import ddspython
-sub = ddspython.BSubscriber()
-sub.init()
+
 
 app = Flask(__name__)
 
 
 @app.route('/DDS-read', methods=['GET'])
 def DDS_read():
+    sub = ddspython.BSubscriber()
+    sub.init()
     sub = ddspython.BSubscriber()
     if not sub.init():
         print("FAILED")
