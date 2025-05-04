@@ -3,7 +3,8 @@
 bridge-src/*
 !bridge-src/generate_code.py
 !bridge-src/Sample.idl
-
+!bridge-src/antlr4_generated/
+!bridge-src/IDL.g4
 bridge-build/*
 !bridge-build/main.py
 !bridge-build/test_main.py

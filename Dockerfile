@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 # 1. Install dependencies
 RUN apt-get update && apt-get install -y \
     git cmake g++ wget curl \
-    python3 python3-pip \
+    python3 python3-pip python3-venv \
     openjdk-11-jdk \
     libssl-dev \
     libasio-dev \
