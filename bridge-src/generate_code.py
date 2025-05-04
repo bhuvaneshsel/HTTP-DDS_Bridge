@@ -96,7 +96,11 @@ public:
         publisher_ = participant_->create_publisher(PUBLISHER_QOS_DEFAULT, nullptr);
         if (!publisher_) return false;
 
-        writer_ = publisher_->create_datawriter(topic_, DATAWRITER_QOS_DEFAULT, &listener_);
+        DataWriterQos writer_qos = DATAWRITER_QOS_DEFAULT;
+        writer_qos.durability().kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+        writer_qos.reliability().kind = RELIABLE_RELIABILITY_QOS;
+    
+        writer_ = publisher_->create_datawriter(topic_, writer_qos, &listener_);
         return writer_ != nullptr;
     }}
 #ifdef BUILD_PYBIND_MODULE
@@ -108,18 +112,20 @@ public:
 
     bool publish()
     {{
-        int retries = 10;
+        int retries = 100;
         while (listener_.matched_ == 0 && retries-- > 0)
         {{
             std::cout << "Waiting for subscriber to match..." << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }}
-
+    
         if (listener_.matched_ > 0)
         {{
+            std::cout << "Subscriber matched. Writing sample..." << std::endl;
             writer_->write(&sample_);
             return true;
         }}
+        std::cerr << "No subscribers matched after retries." << std::endl;
         return false;
     }}
 
@@ -312,7 +318,12 @@ public:
         subscriber_ = participant_->create_subscriber(SUBSCRIBER_QOS_DEFAULT, nullptr);
         if (!subscriber_) return false;
 
-        reader_ = subscriber_->create_datareader(topic_, DATAREADER_QOS_DEFAULT, &listener_);
+        //UPDATED THIS: ADDED DURABILITY SETTINGS
+        DataReaderQos reader_qos = DATAREADER_QOS_DEFAULT;
+        reader_qos.durability().kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+        reader_qos.reliability().kind = RELIABLE_RELIABILITY_QOS;
+
+        reader_ = subscriber_->create_datareader(topic_, reader_qos, &listener_);
         return reader_ != nullptr;
     }}
 
@@ -322,7 +333,7 @@ public:
         //Stop subscriber once data received or past time limit (to connect and receive data).
 
         //Retries = how many seconds before timeout if not connected with publisher.
-        int retries = 10;
+        int retries = 100;
         while (listener_.matched_ == 0 && retries-- > 0)
         {{
             std::cout << "Searching for publisher to match with..." << std::endl;
@@ -331,13 +342,13 @@ public:
         }}
 
         //Retries = seconds to receive JSON data after connecting to publisher.
-        retries = 10;
+        retries = 100;
         if(listener_.matched_ == 1){{
             while(!listener_.received_data_ && retries-- > 0){{
             
                 // Subscriber has received data, now we can stop
                 std::cout << "Awaiting data." << std::endl;
-
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }}
 
             //If true, then means data has been received.
