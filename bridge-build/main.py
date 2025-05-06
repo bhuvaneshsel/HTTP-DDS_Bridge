@@ -20,13 +20,17 @@ def DDS_read_missing_topic():
 @app.route('/DDS-read/<dds_topic>', methods=['GET'])
 def DDS_read(dds_topic):
     try:
+<<<<<<< Updated upstream
         
+=======
+>>>>>>> Stashed changes
         subscriber_name = f"{dds_topic}Subscriber"
 
         SubscriberClass = getattr(ddspython, subscriber_name)
 
         sub = SubscriberClass()
         
+<<<<<<< Updated upstream
         sub.init()
         sub.run()
         # read data
@@ -37,10 +41,30 @@ def DDS_read(dds_topic):
             print("DDS read failed:", e)
 
         return dds_object, 200
+=======
+        if not sub.init():
+            return jsonify({"error": "Subscriber failed to initialize"}), 500
+        
+        sub.run()
+        # read data
+        print(sub.get_json_data())
+        raw_json_str = sub.get_json_data()
+  
+        try:
+            json_data = json.loads(raw_json_str)
+            return jsonify(json_data), 200
+        except Exception as e:
+            print("Error decoding JSON:", e)
+            return jsonify({"error": f"Invalid JSON format: {str(e)}"}), 500
+>>>>>>> Stashed changes
     
     except AttributeError:
         return jsonify({"error": f"Publisher class for '{dds_topic}' not found"}), 404
     except Exception as e:
+<<<<<<< Updated upstream
+=======
+        return jsonify({"error": "Failed to read from DDS", "details": str(e)}), 500
+>>>>>>> Stashed changes
 
         return jsonify({"error": "Failed to read from DDS", "details": str(e)}), 500
 
@@ -76,6 +100,10 @@ def DDS_write(dds_topic):
     
     except Exception as e:
         return jsonify({"error": "Failed to publish", "details": str(e)}), 500
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 if __name__ == "__main__":
     app.run(debug=True)
