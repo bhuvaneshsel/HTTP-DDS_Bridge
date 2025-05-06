@@ -1,6 +1,8 @@
 import os
 import re
 import subprocess
+from idl_parser import parse_structs_with_antlr
+
 
 # === CONFIG ===
 FASTDDSGEN_PATH = "/workspace/extern/fastddsgen/scripts/fastddsgen"
@@ -16,7 +18,7 @@ def extract_struct_names(idl_path):
 # === 2. Generate Publisher App ===
 def generate_publisher_cpp(struct_name: str, idl_name: str, output_dir: str):
 
-    all_structs = extract_struct_fields(IDL_FILENAME)
+    all_structs =  parse_structs_with_antlr(IDL_FILENAME)
     set_data_body = "\n".join(generate_set_data_from_dict(struct_name, all_structs))
    
     # Use plain string for placeholder replacement
@@ -189,7 +191,7 @@ int main()
 # === 3. Generate Subscriber App ===
 def generate_subscriber_cpp(struct_name: str, idl_name: str, output_dir: str):
 
-    all_structs = extract_struct_fields(IDL_FILENAME)
+    all_structs = parse_structs_with_antlr(IDL_FILENAME)
     set_json_body = "\n".join(generate_json_in_subscriber(struct_name, all_structs))
     cpp_code = f"""// Generated Subscriber for struct {struct_name}
 

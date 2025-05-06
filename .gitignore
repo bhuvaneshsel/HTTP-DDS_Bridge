@@ -5,8 +5,12 @@ bridge-src/*
 !bridge-src/Sample.idl
 !bridge-src/antlr4_generated/
 !bridge-src/IDL.g4
+!bridge-src/idl_parser.py
+
 bridge-build/*
 !bridge-build/main.py
 !bridge-build/test_main.py
 !bridge-build/test.py
 !bridge-build/testSub.py
+
+__pycache__
