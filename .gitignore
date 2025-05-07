@@ -13,4 +13,6 @@ bridge-build/*
 !bridge-build/test_pub.py
 !bridge-build/test_sub.py
 
+demo-pub-sub/demo-build
+
 __pycache__

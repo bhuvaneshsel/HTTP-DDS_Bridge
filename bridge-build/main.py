@@ -68,8 +68,12 @@ def DDS_write(dds_topic):
 
         # get and verify data
         data = request.get_json(force=True)
+        print("Do we make it here?")
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
+        
+        if not pub.init():
+            return jsonify({"error": "Publisher failed to initialize"}), 500
         
         pub.set_data(data)
         pub.publish()
