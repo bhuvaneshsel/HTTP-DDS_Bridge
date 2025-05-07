@@ -17,7 +17,7 @@ if pub.init():
 
     json_b = '''
     {
-    "a": { "x": 1.23e4, "y": true },
+    "aVal": { "x": 1.23e4, "y": true },
     "b": [4, 5, 6],
     "c": ["foo", "bar"]
     }

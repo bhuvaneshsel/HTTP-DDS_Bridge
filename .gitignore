@@ -10,7 +10,7 @@ bridge-src/*
 bridge-build/*
 !bridge-build/main.py
 !bridge-build/test_main.py
-!bridge-build/test.py
-!bridge-build/testSub.py
+!bridge-build/test_pub.py
+!bridge-build/test_sub.py
 
 __pycache__
