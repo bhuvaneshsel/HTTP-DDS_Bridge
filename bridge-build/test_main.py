@@ -22,10 +22,45 @@ def client():
 #     assert "error" in response.get_json()
 
 
-def test_dds_read_returns_data(client):
+def test_dds_read_B_success(client):
     response = client.get("/DDS-read/B")
-    response2 = client.get("/DDS-read/A")
-    json_data = print(response.get_json())
-    json_data2 = print(response2.get_json())
     assert response.status_code==200
-    assert response2.status_code==200
+
+def test_dds_read_A_success(client):
+    response = client.get("/DDS-read/A")
+    assert response.status_code==200
+
+def test_dds_read_nonexistent_fail(client):
+    nonexistent_type = "Nonexistent"
+    response = client.get(f"/DDS-read/{nonexistent_type}")
+    assert response.status_code==404
+    assert response.get_json()["error"]==f"Publisher class for '{nonexistent_type}' not found"
+
+def test_dds_read_no_param_fail(client):
+    response = client.get("/DDS-read")
+    assert response.status_code==400
+    assert response.get_json()["error"]=="Missing DDS topic. Use /DDS-read/<dds_topic>"
+
+def test_dds_write_success(client): ### fix this to match A formatting
+    message = {
+
+    }
+    response = client.post(
+        "/DDS-write/A",
+        json=message
+    )
+    assert response.status_code==200
+    assert response.get_json()["status"]=="success"
+
+def test_dds_write_incorrect_format_fail(client):
+    message_text = "this is a test"
+    response = client.post(
+        "/DDS-write/A",
+        json={} # bad formatting for A
+    )
+    assert response.status_code==400
+
+def test_dds_write_no_param_fail(client):
+    response = client.post("/DDS-write")
+    assert response.status_code==400
+    assert response.get_json()["error"]=="Missing topic name. Use /DDS-write/<topic_name>"
