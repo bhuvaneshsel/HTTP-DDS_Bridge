@@ -19,7 +19,7 @@ def extract_struct_names(idl_path):
 def generate_publisher_cpp(struct_name: str, idl_name: str, output_dir: str):
 
     all_structs =  parse_structs_with_antlr(IDL_FILENAME)
-    set_data_body = "\n".join(generate_set_data_from_dict(struct_name, all_structs))
+    set_data_body = "\n".join(generate_set_data_from_dict(struct_name, all_structs, dict_name="d"))
    
     # Use plain string for placeholder replacement
     cpp_code = f"""// Generated Publisher for struct {struct_name}
@@ -544,7 +544,7 @@ def generate_json_in_subscriber(struct_name, all_structs, indent="        ", dat
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var_name="sample_"):
+def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var_name="sample_", dict_name="d"):
     lines = []
     fields = all_structs.get(struct_name, [])
 
@@ -563,43 +563,37 @@ def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var
         "boolean": "bool",
         "char": "char",
         "string": "std::string",
-        # Add more as needed
     }
 
     for field_type, field_name in fields:
         field_type = field_type.strip()
 
         if field_type.startswith("sequence<"):
-            # Extract element type from sequence<...>
             element_type = field_type[len("sequence<"):-1].strip()
             cpp_type = idl_to_cpp_cast_map.get(element_type, element_type)
-            lines.append(f'{indent}if (d.contains("{field_name}"))')
-            lines.append(f'{indent}    {var_name}.{field_name}() = d["{field_name}"].cast<std::vector<{cpp_type}>>();')
+            lines.append(f'{indent}{var_name}.{field_name}() = {dict_name}["{field_name}"].cast<std::vector<{cpp_type}>>();')
 
         elif "[" in field_type:
-            # Handle fixed-size arrays like short[3]
             base_type = field_type.split("[")[0].strip()
             cpp_type = idl_to_cpp_cast_map.get(base_type, base_type)
-            lines.append(f'{indent}if (d.contains("{field_name}")) {{')
-            lines.append(f'{indent}    auto tmp = d["{field_name}"].cast<std::vector<{cpp_type}>>();')
+            lines.append(f'{indent}{{')
+            lines.append(f'{indent}    auto tmp = {dict_name}["{field_name}"].cast<std::vector<{cpp_type}>>();')
             lines.append(f'{indent}    std::copy(tmp.begin(), tmp.end(), {var_name}.{field_name}().begin());')
             lines.append(f'{indent}}}')
 
         elif field_type in all_structs:
-            # Handle nested struct!
-            nested_var_name = f"{var_name}.{field_name}()"  # Accessor to nested struct
-            lines.append(f'{indent}if (d.contains("{field_name}")) {{')
-            lines.append(f'{indent}    auto nested_dict = d["{field_name}"].cast<pybind11::dict>();')
-            lines.extend(generate_set_data_from_dict(field_type, all_structs, indent + "    ", nested_var_name))
+            nested_var_name = f"{var_name}.{field_name}()"
+            lines.append(f'{indent}{{')
+            lines.append(f'{indent}    auto nested_dict = {dict_name}["{field_name}"].cast<pybind11::dict>();')
+            lines.extend(generate_set_data_from_dict(field_type, all_structs, indent + "    ", nested_var_name, "nested_dict"))
             lines.append(f'{indent}}}')
 
         else:
-            # Scalar types
             cpp_type = idl_to_cpp_cast_map.get(field_type, field_type)
-            lines.append(f'{indent}if (d.contains("{field_name}"))')
-            lines.append(f'{indent}    {var_name}.{field_name}(d["{field_name}"].cast<{cpp_type}>());')
+            lines.append(f'{indent}{var_name}.{field_name}({dict_name}["{field_name}"].cast<{cpp_type}>());')
 
     return lines
+
 
 if __name__ == "__main__":
     # Step 1: Run fastddsgen
