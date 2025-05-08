@@ -30,7 +30,9 @@ In another terminal, in root of project run: <br/>
 
 ## 5 Set up project in container and virtual environment
 >tmux <br/>
+
 Make sure you are in /workspace directory: <br/>
+
 >python3 -m venv .venv <br/>
 >source .venv/bin/activate <br/>
 >pip install -r requirements.txt <br/>
