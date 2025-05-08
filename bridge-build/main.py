@@ -68,21 +68,18 @@ def DDS_write(dds_topic):
 
         # get and verify data
         data = request.get_json(force=True)
-        print("Do we make it here?")
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
         
         if not pub.init():
             return jsonify({"error": "Publisher failed to initialize"}), 500
-        
+    
         pub.set_data(data)
         pub.publish()
-
+        
         return jsonify({"status": "success"}), 200
-    
     except AttributeError:
         return jsonify({"error": f"Publisher class for '{dds_topic}' not found"}), 404
-    
     except Exception as e:
         return jsonify({"error": "Failed to publish", "details": str(e)}), 500
 

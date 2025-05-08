@@ -5,7 +5,7 @@ bridge-src/*
 !bridge-src/Sample.idl
 !bridge-src/antlr4_generated/
 !bridge-src/IDL.g4
-!bridge-src/idl_parser.py
+!bridge-src/generator/
 
 bridge-build/*
 !bridge-build/main.py
