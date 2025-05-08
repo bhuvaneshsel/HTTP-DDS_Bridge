@@ -68,13 +68,18 @@ def DDS_write(dds_topic):
 
         # get and verify data
         data = request.get_json(force=True)
+
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
         
         if not pub.init():
             return jsonify({"error": "Publisher failed to initialize"}), 500
     
-        pub.set_data(data)
+        try:
+            pub.set_data(data)
+        except Exception as e:
+            return jsonify({"error": f"Improper formatting for topic: '{dds_topic}'"}), 400
+        
         pub.publish()
         
         return jsonify({"status": "success"}), 200
