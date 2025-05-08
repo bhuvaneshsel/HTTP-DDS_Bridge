@@ -129,7 +129,7 @@ public:
         {
             std::cout << "Searching for publisher to match with..." << std::endl;
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         retries = 100;
@@ -138,7 +138,7 @@ public:
                 if (listener_.received_data_) break;
 
                 std::cout << "Awaiting data." << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }
 
             if(listener_.received_data_){

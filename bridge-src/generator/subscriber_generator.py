@@ -153,7 +153,7 @@ public:
         {{
             std::cout << "Searching for publisher to match with..." << std::endl;
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }}
 
         //Retries = seconds to receive JSON data after connecting to publisher.
@@ -163,7 +163,7 @@ public:
             
                 // Subscriber has received data, now we can stop
                 std::cout << "Awaiting data." << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             }}
 
             //If true, then means data has been received.
