@@ -5,8 +5,8 @@ from antlr4_generated.IDLListener import IDLListener
 
 class StructFieldCollector(IDLListener):
     def __init__(self):
-        self.structs = {}
-        self.current_struct = None
+        self.structs = {}          
+        self.current_struct = None 
 
     def enterStruct_type(self, ctx):
         struct_name = ctx.identifier().getText()
@@ -20,9 +20,11 @@ class StructFieldCollector(IDLListener):
         if not self.current_struct:
             return
 
+        #Gets the type of the field
         type_spec = ctx.type_spec()
         type_text = type_spec.getText()
 
+        #Walks through each variable name declared in a struct member field
         for declarator in ctx.declarators().declarator():
             if declarator.complex_declarator():
                 complex_decl = declarator.complex_declarator()

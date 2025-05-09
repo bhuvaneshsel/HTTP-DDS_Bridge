@@ -165,19 +165,17 @@ int main()
 """
 
     cpp_code = cpp_code.replace("{set_data_body}", set_data_body)
-
+    
     # Write file
-    os.makedirs(output_dir, exist_ok=True)
-    filename = os.path.join(output_dir, f"{struct_name}Publisher.cpp")
-    with open(filename, 'w') as f:
+    os.makedirs(output_dir, exist_ok=True) 
+    filename = os.path.join(output_dir, f"{struct_name}Publisher.cpp") 
+    with open(filename, 'w') as f: 
         f.write(cpp_code)
     print(f"Generated {filename}")
 
 def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var_name="sample_", dict_name="d"):
     lines = []
     fields = all_structs.get(struct_name, [])
-
-    lines.append(f"{indent}using namespace pybind11::literals;")
 
     # IDL to C++ cast mapping
     idl_to_cpp_cast_map = {
@@ -194,22 +192,29 @@ def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var
         "string": "std::string",
     }
 
+    lines.append(f"{indent}using namespace pybind11::literals;")
+
     for field_type, field_name in fields:
         field_type = field_type.strip()
 
+        # Handles sequences
         if field_type.startswith("sequence<"):
-            element_type = field_type[len("sequence<"):-1].strip()
-            cpp_type = idl_to_cpp_cast_map.get(element_type, element_type)
-            lines.append(f'{indent}{var_name}.{field_name}() = {dict_name}["{field_name}"].cast<std::vector<{cpp_type}>>();')
+            element_type = field_type[len("sequence<"):-1].strip()  # Gets the inner field type of the sequence
+            cpp_type = idl_to_cpp_cast_map.get(element_type, element_type)  # Fallback to element_type if not mapped
+            lines.append(f'{indent}{{')
+            lines.append(f'{indent}    {var_name}.{field_name}() = {dict_name}["{field_name}"].cast<std::vector<{cpp_type}>>();')
+            lines.append(f'{indent}}}')
 
+        #Handles arrays
         elif "[" in field_type:
             base_type = field_type.split("[")[0].strip()
             cpp_type = idl_to_cpp_cast_map.get(base_type, base_type)
             lines.append(f'{indent}{{')
             lines.append(f'{indent}    auto tmp = {dict_name}["{field_name}"].cast<std::vector<{cpp_type}>>();')
-            lines.append(f'{indent}    std::copy(tmp.begin(), tmp.end(), {var_name}.{field_name}().begin());')
+            lines.append(f'{indent}    std::copy(tmp.begin(), tmp.end(), {var_name}.{field_name}().begin());') #Copies elements from vector into the array in the struct
             lines.append(f'{indent}}}')
 
+        #Handles nested structs through recursion
         elif field_type in all_structs:
             nested_var_name = f"{var_name}.{field_name}()"
             lines.append(f'{indent}{{')
@@ -217,6 +222,7 @@ def generate_set_data_from_dict(struct_name, all_structs, indent="        ", var
             lines.extend(generate_set_data_from_dict(field_type, all_structs, indent + "    ", nested_var_name, "nested_dict"))
             lines.append(f'{indent}}}')
 
+        #Handles primitive types
         else:
             cpp_type = idl_to_cpp_cast_map.get(field_type, field_type)
             lines.append(f'{indent}{var_name}.{field_name}({dict_name}["{field_name}"].cast<{cpp_type}>());')

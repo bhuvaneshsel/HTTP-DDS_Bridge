@@ -72,8 +72,8 @@ private:
                 std::cout << "x: " << sample_.aVal().x()
                         << " | y: " << (sample_.aVal().y() ? "true" : "false")
                         << " | b[0]: " << sample_.b()[0]
-                        << " | b[0]: " << sample_.b()[1]
-                        << " | b[0]: " << sample_.b()[2]
+                        << " | b[1]: " << sample_.b()[1]
+                        << " | b[2]: " << sample_.b()[2]
                         << " | c[0]: " << sample_.c()[0]
                         << " | c[1]: " << sample_.c()[1]
                          << std::endl;

@@ -94,11 +94,11 @@ private:
         
         //------------------------------------------------------------------------------------------------------------------
         // Convert the data to JSON.
-    json convert_data_to_json()
-    {{
-            //Remember that: sample_ is the data.
-{set_json_body}
-    }}
+        json convert_data_to_json()
+        {{
+                //Remember that: sample_ is the data.
+    {set_json_body}
+        }}
         //------------------------------------------------------------------------------------------------------------------
     }} listener_;
 
@@ -184,9 +184,8 @@ public:
     }}
 
     //------------------------------------------------------------------------------------------------------------------
-    //Retrieves JSON data we received (and server should call method to retrieve it via pybibd.----------------------------------------------------------------------------------------------------------------------------------
-        // Expose the method that returns JSON data
-
+    //Retrieves JSON data we received (and server should call method to retrieve it via pybind)
+    //------------------------------------------------------------------------------------------------------------------
     std::string get_json_data() {{
         return listener_.json_data.dump();  // Dump JSON string here
     }}
@@ -195,24 +194,22 @@ public:
 
 
 }};
-//MUST BE OUTSIDE any functions or class.
-//Pybind Code---------------------------------------------------------------------------------------------------------------------------------------
-    #ifdef BUILD_PYBIND_MODULE
-    #include <pybind11/pybind11.h>
-    #include <pybind11/stl.h>
-    #include <pybind11/pytypes.h>
 
-    namespace py = pybind11;
-    void bind_{struct_name}Subscriber(py::module_& m)
-    {{
-        py::class_<{struct_name}Subscriber>(m, "{struct_name}Subscriber")
-            .def(py::init<>())
-            .def("init", &{struct_name}Subscriber::init)
-            .def("get_json_data", &{struct_name}Subscriber::get_json_data)
-            .def("run", &{struct_name}Subscriber::run);
-    }}
-    #endif
-    //---------------------------------------------------------------------------------------------------------------------------------------
+#ifdef BUILD_PYBIND_MODULE
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/pytypes.h>
+
+namespace py = pybind11;
+void bind_{struct_name}Subscriber(py::module_& m)
+{{
+    py::class_<{struct_name}Subscriber>(m, "{struct_name}Subscriber")
+        .def(py::init<>())
+        .def("init", &{struct_name}Subscriber::init)
+        .def("get_json_data", &{struct_name}Subscriber::get_json_data)
+        .def("run", &{struct_name}Subscriber::run);
+}}
+#endif
 
 #ifndef BUILD_PYBIND_MODULE
 int main()
