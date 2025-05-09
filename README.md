@@ -6,32 +6,60 @@ HTTP-DDS_Bridge is a bridge application that converts JSON data from an HTTP cli
 - can convert HTTP GET to DDS read
 
 # Set Up Guide
-## 1. Build the DDS App
-  1. Create a folder called build inside the dds folder.
-  2. Change directory into the build folder and run the commands:
-      >cmake .. <br/>
-      >cmake --build . <br/>
-    *This is for Mac, it might vary for Windows/Linux
-## 2. Build the Bridge App
-  1. Change directory into the bridge folder and create a virtual environment:
-     >Windows: py -3 -m venv .venv  <br/>
-     >Windows: .venv\Scripts\activate  <br/>
-    
-     >Mac: python3 -m venv .venv  <br/>
-     >Mac: source .venv/bin/activate  <br/>
-  *Note that for Windows, you might run into an error where you don't have permissions to activate the Virtual Environment if you are using the VSCode terminal. In that case, use     command prompt instead.
-  2. Install from requirements.txt:<br>
-     >Make sure your virtual environment is active<br/>
-     >pip install -r requirements.txt<br/>
-## 3. Run Both Apps
-  1. In the bridge folder with your virtual environment active, run:
-     >python main.py
-  2. In a different terminal, in your build folder, run:
-     >./DDSTestSubscriber
-  This will start the Publisher and Subscriber.
-## 4. Use PostMan/curl to test
-  1. JSON should be in the format
-    {
-      "index": 10,
-      "message": "Test message"
-    }
+## 1. Open docker desktop
+
+## 2. Make sure submodules are up to date
+In root of project:
+>git submodule update --init --recursive
+
+## 3. Open these files in VSCode and in the bottom right change it from CRLF to LF (for Windows only)
+extern/fastddsgen/gradlew <br/>
+Dockerfile <br/>
+extern/fastddsgen/scripts/fastddsgen <br/>
+
+## 4. Build Docker container:**
+In root of project run:
+>docker-compose up --build
+
+*If something goes wrong with build and you want to start fresh:* <br/>
+>docker-compose build --no-cache <br/>
+>docker-compose up --build <br/>
+
+In another terminal, in root of project run: <br/>
+>docker-compose exec dds bash <br/>
+
+## 5 Set up project in container and virtual environment
+>tmux <br/>
+
+Make sure you are in /workspace directory: <br/>
+
+>python3 -m venv .venv <br/>
+>source .venv/bin/activate <br/>
+>pip install -r requirements.txt <br/>
+
+*Note that everytime you open up a new tmux pane you have to reactive the virtual environment <br/>
+
+Build fastddsgen: <br/>
+>cd extern/fastddsgen <br/>
+>./gradlew assemble <br/>
+
+
+>cd /workspace/bridge-src <br/>
+>python3 generate_code.py <br/>
+>cd ../bridge-build <br/>
+>cmake .. <br/>
+>cmake --build . <br/>
+>python3 main.py <br/>
+
+In another pane in tmux: <br/>
+>cd demo-pub-sub/demo-build <br/>
+>cmake .. <br/>
+>cmake --build . <br/>
+>./DemoSubscriber OR ./DemoPublisher <br/>
+
+Use postman. For GET requests, run ./DemoPublisher. For POST requests, run ./DemoSubscriber <br/>
+
+## TMUX Controls 
+Ctrl + B followed by % to open a new vertical pane <br/>
+Ctrl + B followed by " to open up a new horizontal pane <br/>
+Ctrl + B followed by arrow keys to switch between panes <br/>

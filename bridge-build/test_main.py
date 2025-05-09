@@ -41,12 +41,26 @@ def test_dds_read_no_param_fail(client):
     assert response.status_code==400
     assert response.get_json()["error"]=="Missing DDS topic. Use /DDS-read/<dds_topic>"
 
-def test_dds_write_success(client): ### fix this to match A formatting
+def test_dds_write_A_success(client):
     message = {
-
+        "x": 38.2,
+        "y": True
     }
     response = client.post(
         "/DDS-write/A",
+        json=message
+    )
+    assert response.status_code==200
+    assert response.get_json()["status"]=="success"
+
+def test_dds_write_B_success(client):
+    message = {
+        "aVal": {"x": 38.2, "y": True},
+        "b": [1, 2, 3],
+        "c": ["hello", "goodbye"]
+    }
+    response = client.post(
+        "/DDS-write/B",
         json=message
     )
     assert response.status_code==200
@@ -56,7 +70,7 @@ def test_dds_write_incorrect_format_fail(client):
     message_text = "this is a test"
     response = client.post(
         "/DDS-write/A",
-        json={} # bad formatting for A
+        json={}
     )
     assert response.status_code==400
 
